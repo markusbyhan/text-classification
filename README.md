@@ -34,3 +34,80 @@ I won’t go into detail on all the fundamentals of machine learning here, as th
 ### Random Forest:
 - [Random Forest Algorithm Explained](https://towardsdatascience.com/the-random-forest-algorithm-d457d499ffcd)
 - [Random Forest in Machine Learning](https://www.geeksforgeeks.org/random-forest-in-machine-learning/)
+
+## Setup:
+Package installation
+
+```r
+# Installing Basic Packages
+install.packages("jsonlite")    # Read JSON files
+install.packages("dplyr")       # Data Manipulation
+install.packages("gridExtra")   # Extras for tables
+install.packages("utils")       # Utilities for R
+
+# Installing Text Preprocessing Packages
+install.packages("tidyverse")
+install.packages("tidytext")    # Text mining
+install.packages("tm")          # Text mining
+install.packages("quanteda")    # Quantitative text data analysis
+install.packages("SnowballC")   # Stemmer
+install.packages("textstem")    # Stemming and Lemmatizing
+install.packages("slam")        # Sparse lightweight arrays and matrices
+install.packages("syuzhet")
+install.packages("koRpus")      # Text analysis
+install.koRpus.lang("de")       # German language package
+
+# Installing Visualization Packages
+install.packages("ggplot2")
+install.packages("wordcloud2")
+install.packages("RColorBrewer")
+
+# Installing Machine Learning Packages
+install.packages("text2vec")
+install.packages("e1071")
+install.packages("caret")
+install.packages("caTools")
+install.packages("randomForest")
+```
+
+## After installing: Package loading
+
+```r
+# Loading the Libraries
+library(jsonlite)
+library(dplyr)
+library(gridExtra)
+
+library(tidyverse)
+library(tidytext)
+library(tm)
+library(quanteda)
+library(SnowballC)
+library(koRpus)
+library(koRpus.lang.de)
+library(textstem)
+library(slam)
+
+library(ggplot2)
+library(wordcloud2)
+library(RColorBrewer)
+
+library(e1071)
+library(caret)
+library(caTools)
+library(randomForest)
+library(syuzhet)
+
+library(lubridate)
+library(stringr)
+library(tidyr)
+library(readr)
+```
+
+## Notes:
+- The Basic Packages section includes utilities required for general data manipulation.
+- The Text Preprocessing Packages focus on text mining and analysis tasks.
+- The Visualization Packages provide tools for creating plots and visualizations.
+- The Machine Learning Packages enable you to build and evaluate models effectively.
+
+Use this code block in your R environment to install and load the necessary libraries.
