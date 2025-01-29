@@ -9,13 +9,13 @@ special treatment in the evaluation function.
 # This section implements a majority decision strategy to determine binary labels based on user ratings.
 
 # Restrict to columns A001 - A012
-train_prep_2 <- train_prep %>%
+train_prep_comp_2 <- germ_comp_clean %>%
   select(A001:A012)
 
 # Majority decision function
-majority_decision <- function(train_prep_2) {
+majority_decision <- function(train_prep_comp_2) {
   # Apply the function to each row of the dataframe
-  apply(train_prep_2, 1, function(row) {
+  apply(train_prep_comp_2, 1, function(row) {
     # Remove NA values
     valid_values <- row[!is.na(row)]
     # Count the number of 0 values
@@ -38,9 +38,9 @@ majority_decision <- function(train_prep_2) {
 }
 
 # Execute the function
-results <- majority_decision(train_prep_2)
+results <- majority_decision(train_prep_comp_2)
 
 # Add columns to define final labels based on different strategies
-train_prep_2$bin_maj <- results
-train_prep_2$bin_maj <- as.factor(train_prep_2$bin_maj)
+train_prep_comp_2$bin_maj <- results
+train_prep_comp_2$bin_maj <- as.factor(train_prep_comp_2$bin_maj)
 ```
