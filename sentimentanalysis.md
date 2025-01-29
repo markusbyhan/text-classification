@@ -5,35 +5,6 @@ The following steps perform a sentiment analysis using the **syuzhet** package. 
 ## Steps for Sentiment Analysis
 
 ```r
-# Function to save a DataFrame to a text file
-save_dataframe_to_text <- function(tokens_comp_train_flat, file_name) {
-  # Open a connection to the specified file in write mode
-  # This allows writing text content to the file
-  file_conn <- file(file_name, open = "wt")
-  
-  # Iterate through each row of the "Tokens" column
-  for (i in 1:nrow(tokens_comp_train_flat)) {
-    # Write the sentence (tokens) to the file
-    # Each row of the "Tokens" column is written as a separate line
-    writeLines(tokens_comp_train_flat$Tokens[i], file_conn)
-    
-    # Add a blank line after each sentence
-    # Blank lines improve readability or can be required by certain NLP tools
-    writeLines("", file_conn)
-  }
-  
-  # Close the file connection
-  # Ensures that all data is written to the file and resources are released
-  close(file_conn)
-}
-
-# Save the DataFrame to a text file
-# This step writes the tokenized data from the DataFrame to a text file
-# The resulting file can be used for further sentiment analysis or NLP processing
-save_dataframe_to_text(tokens_comp_train_flat, "tokens_comp_train_flat.txt")
-```
-
-```r
 # Extract sentences from the tokenized data
 # `get_sentences` splits the tokenized text into individual sentences
 sentence_vector_comp <- get_sentences(tokens_comp_train_flat$Tokens)
