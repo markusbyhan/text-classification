@@ -16,33 +16,39 @@ The following section explains and computes the Inverse Document Frequency (IDF)
 - **TF-IDF:** \( TF\_IDF = TF \times IDF \)
 
 ```r
-# Feature Extraction Using TF-IDF
+# Step 1: Create Document-Term Matrix (DTM) from the Lemmatized Corpus
+lemma_comp_dtm <- DocumentTermMatrix(lemma_comp_corpus)
 
-The following steps extract features using TF-IDF for all terms in the corpus, with additional processing steps such as reducing sparsity and scaling.
+# Step 2: Apply TF-IDF weighting to the DTM
+lemma_comp_tfidf <- weightTfIdf(lemma_comp_dtm)
 
-# Create a Document-Term Matrix (DTM) from the tokenized corpus
-# The DTM represents the frequency of each term in each document
-dtm_train <- DocumentTermMatrix(Corpus(VectorSource(tokens_flat$Tokens)))
+# Step 3: Remove sparse terms from the TF-IDF matrix to reduce dimensionality
+# The 'sparse = 0.97' parameter retains terms that appear in at least 3% of the documents
+lemma_comp_tfidf <- removeSparseTerms(lemma_comp_tfidf, sparse = 0.97)
 
-# Compute TF-IDF for the terms in the DTM
-# The weightTfIdf function calculates the TF-IDF values for the matrix
-tfidf_train <- weightTfIdf(dtm_train)
+# Display the resulting sparse TF-IDF matrix structure
+lemma_comp_tfidf
 
-# Reduce sparsity to keep only frequent terms
-# The removeSparseTerms function removes terms that appear in less than (1 - 0.965) documents
-tfidf_train <- removeSparseTerms(tfidf_train, sparse = 0.965)
+# Step 4: Convert the sparse TF-IDF matrix to a dense matrix for easier handling
+lemma_comp_tfidf_matrix <- as.matrix(lemma_comp_tfidf)
 
-# Convert the resulting TF-IDF matrix into a standard matrix format
-# This allows for easier manipulation and processing
-tfidf_train_matrix <- as.matrix(tfidf_train)
+# Step 5: Clean up column names to ensure they are syntactically valid
+colnames(lemma_comp_tfidf_matrix) <- make.names(colnames(lemma_comp_tfidf_matrix))
 
-# Ensure column names are valid for further processing
-colnames(tfidf_train_matrix) <- make.names(colnames(tfidf_train_matrix))
+# Summarize the TF-IDF matrix for inspection
+summary(lemma_comp_tfidf_matrix)
 
-# Print a summary of the TF-IDF matrix for inspection
-summary(tfidf_train_matrix)
+# Step 6: Scale the TF-IDF matrix
+# This step ensures the features have zero mean and unit variance for consistency in downstream models
+lemma_comp_tfidf_matrix_scaled <- scale(lemma_comp_tfidf_matrix)
 
-# Scale the matrix for normalization
-# The scale function normalizes the TF-IDF values to ensure comparability across features
-tfidf_train_matrix_scaled <- scale(tfidf_train_matrix)
+# Similarly, scale the sentiment scores to ensure they are on a comparable scale
+sentiment_scores_comp_sen_scaled <- scale(sentiment_scores_comp_sen)
+
+# Verify the mean values of the scaled TF-IDF matrix
+colMeans(lemma_comp_tfidf_matrix_scaled)
+
+# Step 7: Combine Scaled TF-IDF Features with Sentiment Scores
+# This step merges textual features (TF-IDF) with numerical sentiment scores for richer feature representation
+combined_comp_final <- cbind(lemma_comp_tfidf_matrix_scaled, sentiment_scores_comp_sen_scaled)
 ```
