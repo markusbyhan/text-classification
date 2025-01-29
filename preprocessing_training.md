@@ -5,7 +5,7 @@ The following steps include reading the training dataset and stopword lists for 
 ```r
 file_path <- "C:/path/to/training-dataset/germeval-competition-traindev.jsonl" # Define file paths
 con <- file(file_path, "r")
-germ_train <- stream_in(con)
+germ_comp_train <- stream_in(con)
 close(con)
 
 # 1.2 Stopword Removal
@@ -29,7 +29,7 @@ all_stopwords <- unique(c(stopwords_1, stopwords_2, stopwords_german))
 The following code transforms the \`annotations\` column in the dataset by unnesting it and restructuring it to have separate columns for each user.
 
 ```r
-germ_train_2 <- germ_train %>%
+germ_comp_train_2 <- germ_comp_train %>%
   mutate(row = row_number()) %>%         # Add a row number to uniquely identify each row
   unnest(annotations) %>%                # Unnest the annotations column
   pivot_wider(names_from = user,         # Create separate columns for each user
@@ -54,24 +54,24 @@ The following steps adjust the column order, clean the labels to retain only num
 
 ```r
 # Adjusting the column order:
-germ_train_3 <- germ_train_2 %>%
+germ_comp_train_3 <- germ_comp_train_2 %>%
   select(-starts_with("A")) %>%  # Select all columns except those starting with "A001-A012"
   bind_cols(
-    germ_train_2 %>%
+    germ_comp_train_2 %>%
     select(starts_with("A")) %>%  # Select only columns that start with "A"
     select(sort(names(.)))  # Sort column names alphabetically
   )
 
 # Cleaning the labels to retain numeric values:
-germ_train_4 <- germ_train_3 %>%
+germ_comp_train_4 <- germ_comp_train_3 %>%
   mutate(across(starts_with("A"), ~if_else(is.na(.), ., str_extract(., "^[0-9]+"))))
 
 # Converting column types to numeric:
-germ_train_4 <- germ_train_4 %>%
+germ_comp_train_4 <- germ_comp_train_4 %>%
   mutate(across(starts_with("A"), as.numeric))
 
 # Removing duplicates:
-germ_train_clean <- unique(germ_train_4)
+germ_comp_clean <- unique(germ_comp_train_4)
 ```
 ![Sample Image](D:\BA_Github\germ_train_clean.png "germ_train_clean")
 
@@ -81,50 +81,51 @@ germ_train_clean <- unique(germ_train_4)
 # 3.1 To Do: Statistics of the Training Dataset
 
 # Create a data frame to calculate statistics
-word_stats <- germ_train_clean %>%
+comp_stats <- germ_comp_clean %>%
   select(id, text) %>%
   mutate(word_count = str_count(text, "\\S+"))  # Count the number of words per text
 
 # Calculate word statistics (min, max, average) before removing stopwords
-word_stats_2 <- data.frame(
-  texte_training = nrow(word_stats),             # Total number of texts
-  total_word_count = sum(word_stats$word_count), # Total word count
-  max_words = max(word_stats$word_count),        # Maximum words in a text
-  min_words = min(word_stats$word_count),        # Minimum words in a text
-  avg_words = mean(word_stats$word_count)        # Average words per text
+comp_stats_2 <- data.frame(
+  texte_training = nrow(comp_stats),             # Total number of texts
+  total_word_count = sum(comp_stats$word_count), # Total word count
+  max_words = max(comp_stats$word_count),        # Maximum words in a text
+  min_words = min(comp_stats$word_count),        # Minimum words in a text
+  avg_words = mean(comp_stats$word_count)        # Average words per text
 )
 
 # Count the number of ratings per text
-rating_counts <- germ_train_clean %>%
+rating_counts <- germ_comp_clean %>%
   rowwise() %>%
   mutate(rating_count = sum(!is.na(c_across(A001:A012)))) %>%
   ungroup() %>%
   select(id, rating_count)
 
 # Attach the rating count to germ_train_clean
-germ_train_clean <- germ_train_clean %>%
+germ_comp_clean <- germ_comp_clean %>%
   left_join(rating_counts, by = "id")
 
 # Select columns for ratings starting with 'A'
-rating_cols <- grep("^A", names(germ_train_clean), value = TRUE)
+rating_cols <- grep("^A", names(germ_comp_clean), value = TRUE)
 
 # Calculate the average rating for each row and add as a new column "average_rating"
-germ_train_clean <- germ_train_clean %>%
+germ_comp_clean <- germ_comp_clean %>%
   mutate(average_rating = rowMeans(select(., all_of(rating_cols)), na.rm = TRUE))
 
 # Group texts into 5 groups based on word count: 1 - 173, average: 33
-germ_train_statistics <- word_stats %>%
+germ_comp_statistics <- comp_stats %>%
   mutate(quantity_words =
            ifelse(word_stats$word_count %in% 1:30, "1 - 30",
            ifelse(word_stats$word_count %in% 31:60, "31 - 60",
            ifelse(word_stats$word_count %in% 61:90, "61 - 90",
            ifelse(word_stats$word_count %in% 91:120, "91 - 120",
            ifelse(word_stats$word_count %in% 121:150, "121 - 150",
-                  "more than 150"))))))
+                  "more than 150")))))) %>%
+  count(quantity_words)
 
 # User Annotations:
 # Per user: Total number of ratings, distribution of ratings from 0 - 4 (bar chart, users on the X-axis)
-gts <- germ_train_clean %>%
+gts <- germ_comp_clean %>%
   select(starts_with("A0"))
 
 texts_with_label <- colSums(!is.na(gts))
@@ -137,8 +138,8 @@ gts_2 <- gts_2 %>%
   arrange(desc(texts_with_label))
 
 # Distribution of the number of ratings: texts with 4 - 11 ratings
-range(germ_train_clean$rating_count)
-value_counts <- table(factor(germ_train_clean$rating_count, levels = 4:11))
+range(germ_comp_clean$rating_count)
+value_counts <- table(factor(germ_comp_clean$rating_count, levels = 4:11))
 
 # Convert the table to a data frame
 gts_3 <- as.data.frame(value_counts)
