@@ -5,40 +5,120 @@ The following steps perform a sentiment analysis using the **syuzhet** package. 
 ## Steps for Sentiment Analysis
 
 ```r
-# Specify the path to the .txt file containing the text data
-# Replace "path/to/tree_tokens_data.txt" with the actual path to your text file
-sentiment_path <- "path/to/tree_tokens_data.txt"
+# Function to save a DataFrame to a text file
+save_dataframe_to_text <- function(tokens_comp_train_flat, file_name) {
+  # Open a connection to the specified file in write mode
+  # This allows writing text content to the file
+  file_conn <- file(file_name, open = "wt")
+  
+  # Iterate through each row of the "Tokens" column
+  for (i in 1:nrow(tokens_comp_train_flat)) {
+    # Write the sentence (tokens) to the file
+    # Each row of the "Tokens" column is written as a separate line
+    writeLines(tokens_comp_train_flat$Tokens[i], file_conn)
+    
+    # Add a blank line after each sentence
+    # Blank lines improve readability or can be required by certain NLP tools
+    writeLines("", file_conn)
+  }
+  
+  # Close the file connection
+  # Ensures that all data is written to the file and resources are released
+  close(file_conn)
+}
 
-# Read the .txt file into a string for processing
-# The `scan` function reads the file line by line and converts it into a character vector
-text_string <- scan(file = sentiment_path, fileEncoding = "UTF-8", what = character(), sep = "\n", allowEscapes = TRUE)
-
-# Tokenize the text into individual words
-# The `get_tokens` function splits the string into tokens (words) for analysis
-text_words <- get_tokens(text_string)
-
-# Check the total number of words
-# Use `length` to count the number of tokens
-length(text_words) # Prints the number of words
-
-# Convert the text into sentences for sentence-based analysis
-# The `get_sentences` function splits the text into sentences, which can be used for sentence-level sentiment analysis
-sentence_vector <- get_sentences(text_words)
-
-# Perform sentiment analysis using the NRC Sentiment Lexicon
-# The `get_nrc_sentiment` function assigns sentiment scores to individual words based on the lexicon
-# Set `lang = "german"` to use the German NRC Lexicon
-sentiment_scores <- get_nrc_sentiment(text_words, lang = "german")
-
-# Display the first few rows of sentiment scores
-# Use `head` to preview the first rows of the resulting data frame
-head(sentiment_scores)
-
-# Summarize the sentiment scores
-# Use `summary` to provide a statistical overview of the sentiment scores
-summary(sentiment_scores)
+# Save the DataFrame to a text file
+# This step writes the tokenized data from the DataFrame to a text file
+# The resulting file can be used for further sentiment analysis or NLP processing
+save_dataframe_to_text(tokens_comp_train_flat, "tokens_comp_train_flat.txt")
 ```
 
+```r
+# Extract sentences from the tokenized data
+# `get_sentences` splits the tokenized text into individual sentences
+sentence_vector_comp <- get_sentences(tokens_comp_train_flat$Tokens)
+
+# Check the number of sentences extracted
+# This helps to validate that sentences are correctly split
+length(sentence_vector_comp)
+
+# Perform sentiment analysis using the NRC Sentiment Lexicon
+# `get_nrc_sentiment` assigns sentiment scores for each emotion category
+# `lang = "german"` specifies that the analysis uses German lexicons
+sentiment_scores_comp_sen <- get_nrc_sentiment(tokens_comp_train_flat$Tokens, lang = "german")
+
+# Display the first few rows of sentiment scores
+# This provides a quick look at the sentiment distribution for initial analysis
+head(sentiment_scores_comp_sen)
+
+# Summarize the sentiment scores
+# This gives an overview of sentiment distributions across the dataset
+summary(sentiment_scores_comp_sen)
+```
+Bild einfügen: summary_sentiment
+
+### Frequent Words by Sentiment
+```r
+Anger
+anger_words <- text_words[sentiment_scores_comp_sen$anger > 0]
+anger_word_order <- sort(table(unlist(anger_words)), decreasing = TRUE)
+head(anger_word_order, n = 12)
+length(anger_word_order)
+
+Anticipation
+anticipation_words <- text_words[sentiment_scores_comp_sen$anticipation > 0]
+anticipation_word_order <- sort(table(unlist(anticipation_words)), decreasing = TRUE)
+head(anticipation_word_order, n = 12)
+length(anticipation_word_order)
+
+Disgust
+disgust_words <- text_words[sentiment_scores_comp_sen$disgust > 0]
+disgust_word_order <- sort(table(unlist(disgust_words)), decreasing = TRUE)
+head(disgust_word_order, n = 12)
+length(disgust_word_order)
+
+Fear
+fear_words <- text_words[sentiment_scores_com_sen$fear > 0]
+fear_word_order <- sort(table(unlist(fear_words)), decreasing = TRUE)
+head(fear_word_order, n = 12)
+length(fear_word_order)
+
+Joy
+joy_words <- text_words[sentiment_scores_comp_sen$joy > 0]
+joy_word_order <- sort(table(unlist(joy_words)), decreasing = TRUE)
+head(joy_word_order, n = 12)
+length(joy_word_order)
+
+Sadness
+sadness_words <- text_words[sentiment_scores_comp_sen$sadness > 0]
+sadness_word_order <- sort(table(unlist(sadness_words)), decreasing = TRUE)
+head(sadness_word_order, n = 12)
+length(sadness_word_order)
+
+Surprise
+surprise_words <- text_words[sentiment_scores_comp_sen$surprise > 0]
+surprise_word_order <- sort(table(unlist(surprise_words)), decreasing = TRUE)
+head(surprise_word_order, n = 12)
+length(surprise_word_order)
+
+Trust
+trust_words <- text_words[sentiment_scores_comp_sen$trust > 0]
+trust_word_order <- sort(table(unlist(trust_words)), decreasing = TRUE)
+head(trust_word_order, n = 12)
+length(trust_word_order)
+
+Negative Sentiment
+negative_words <- text_words[sentiment_scores_comp_sen$negative > 0]
+negative_word_order <- sort(table(unlist(negative_words)), decreasing = TRUE)
+head(negative_word_order, n = 12)
+length(negative_word_order)
+
+Positive Sentiment
+positive_words <- text_words[sentiment_scores_comp_sen$positive > 0]
+positive_word_order <- sort(table(unlist(positive_words)), decreasing = TRUE)
+head(positive_word_order, n = 12)
+length(positive_word_order)
+```
 # Visualizing Sentiment Analysis
 
 The following steps provide a visual representation of the sentiment analysis results using bar plots. Additionally, the most frequent words associated with specific emotions and sentiments are extracted and displayed.
@@ -51,96 +131,44 @@ The following steps provide a visual representation of the sentiment analysis re
 A bar plot is used to display the proportional distribution of emotions in the training data.
 
 ```r
-# Bar plot for emotion distribution
+# Calculate proportions of sums for sentiment scores
+# This computes the proportional distribution of each sentiment category
+proportions <- colSums(prop.table(sentiment_comp_sen[, 1:10]))
+
+# Define the standard spacing for bars
+# Spaces control the visual gaps between bars in the barplot
+spaces <- rep(0.2, 9)  # Define equal spacing for 9 gaps (between 10 bars)
+
+# Increase the spacing specifically between the 8th and 9th bars
+# This highlights the separation between specific sentiment categories
+spaces[9] <- 1  # Add larger gap between bars 8 and 9
+
+# Define colors for all bars
+# Use a predefined palette for the first 8 bars
+colors <- brewer.pal(n = 8, name = "Set3")
+
+# Ensure the palette length matches the number of bars (10 in total)
+if (length(colors) < 10) {
+  colors <- rep(colors, length.out = 10)
+}
+
+# Customize colors for the 9th and 10th bars
+colors[9] <- "#eb3434"    # Custom red color for the 9th bar
+colors[10] <- "#099e22"   # Custom green color for the 10th bar
+
+# Create the bar plot
 barplot(
-  colSums(prop.table(sentiment_scores[, 1:8])), # Proportional sum of emotions
-  space = 0.2,
-  horiz = FALSE,
-  las = 1,
-  cex.names = 0.7,
-  col = brewer.pal(n = 8, name = "Set3"), # Color palette for emotions
-  main = "Training Data",
-  sub = "Emotion Distribution",
-  xlab = "Emotions", 
-  ylab = NULL
+  proportions,           # Data to visualize
+  space = spaces,        # Apply individual spacing
+  horiz = FALSE,         # Vertical bars
+  las = 1,               # Rotate axis labels to be horizontal
+  cex.names = 0.5,       # Adjust size of category labels
+  col = colors,          # Apply color palette
+  main = "Sentiment analysis of training data",  # Chart title
+  xlab = "Distribution of emotions",            # X-axis label
+  ylab = "Share of the corpus"                  # Y-axis label
 )
 ```
+Bild einfügen: Sentiment_train
 
-### 2. Positive/Negative Sentiment Distribution
-```r
-barplot(
-  colSums(prop.table(sentiment_scores[, 9:10])), # Proportional sum of positive/negative sentiments
-  space = 0.2,
-  horiz = FALSE,
-  las = 1,
-  cex.names = 0.7,
-  col = brewer.pal(n = 2, name = "Set3"), # Color palette for sentiments
-  main = "Training Data",
-  sub = "Positive/Negative Distribution",
-  xlab = "Sentiments", 
-  ylab = NULL
-)
-```
-
-### Frequent Words by Sentiment
-```r
-Anger
-anger_words <- text_words[sentiment_scores$anger > 0]
-anger_word_order <- sort(table(unlist(anger_words)), decreasing = TRUE)
-head(anger_word_order, n = 12)
-length(anger_word_order)
-
-Anticipation
-anticipation_words <- text_words[sentiment_scores$anticipation > 0]
-anticipation_word_order <- sort(table(unlist(anticipation_words)), decreasing = TRUE)
-head(anticipation_word_order, n = 12)
-length(anticipation_word_order)
-
-Disgust
-disgust_words <- text_words[sentiment_scores$disgust > 0]
-disgust_word_order <- sort(table(unlist(disgust_words)), decreasing = TRUE)
-head(disgust_word_order, n = 12)
-length(disgust_word_order)
-
-Fear
-fear_words <- text_words[sentiment_scores$fear > 0]
-fear_word_order <- sort(table(unlist(fear_words)), decreasing = TRUE)
-head(fear_word_order, n = 12)
-length(fear_word_order)
-
-Joy
-joy_words <- text_words[sentiment_scores$joy > 0]
-joy_word_order <- sort(table(unlist(joy_words)), decreasing = TRUE)
-head(joy_word_order, n = 12)
-length(joy_word_order)
-
-Sadness
-sadness_words <- text_words[sentiment_scores$sadness > 0]
-sadness_word_order <- sort(table(unlist(sadness_words)), decreasing = TRUE)
-head(sadness_word_order, n = 12)
-length(sadness_word_order)
-
-Surprise
-surprise_words <- text_words[sentiment_scores$surprise > 0]
-surprise_word_order <- sort(table(unlist(surprise_words)), decreasing = TRUE)
-head(surprise_word_order, n = 12)
-length(surprise_word_order)
-
-Trust
-trust_words <- text_words[sentiment_scores$trust > 0]
-trust_word_order <- sort(table(unlist(trust_words)), decreasing = TRUE)
-head(trust_word_order, n = 12)
-length(trust_word_order)
-
-Negative Sentiment
-negative_words <- text_words[sentiment_scores$negative > 0]
-negative_word_order <- sort(table(unlist(negative_words)), decreasing = TRUE)
-head(negative_word_order, n = 12)
-length(negative_word_order)
-
-Positive Sentiment
-positive_words <- text_words[sentiment_scores$positive > 0]
-positive_word_order <- sort(table(unlist(positive_words)), decreasing = TRUE)
-head(positive_word_order, n = 12)
-length(positive_word_order)
 ```
