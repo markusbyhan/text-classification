@@ -1,23 +1,23 @@
 # Strategy 4 ("multi_maj"): Multi-Majority
 
 This strategy determines the majority label across all annotators for each text. If no clear majority exists (e.g., a tie or all values 
-are \`NA\`), the result is set to \`NA\`.
+are `NA`), the result is set to `NA`.
 
 **Determination of a Multi-Majority**
 
-In this function, we use \`table()\` to create a frequency table of the values in each row (excluding \`NA\`). The \`which.max()\` 
+In this function, we use `table()` to create a frequency table of the values in each row (excluding `NA`). The `which.max()` 
 function is used to identify the most frequently occurring label. If there is a single clear majority label, it is returned. 
-If multiple labels occur with the same frequency or all values are \`NA\`, the function returns \`NA\` to indicate that no clear 
+If multiple labels occur with the same frequency or all values are `NA`, the function returns `NA` to indicate that no clear 
 majority exists.
 
 ```r
 # Restrict to columns A001 - A012
-train_prep_5 <- train_prep %>%
+train_prep_comp_5 <- germ_comp_clean %>%
   select(A001:A012)
 
 # Function to determine the majority label
-multi_majority <- function(train_prep_5) {
-  apply(train_prep_5, 1, function(row) {
+multi_majority <- function(train_prep_comp_5) {
+  apply(train_prep_comp_5, 1, function(row) {
     # Remove NA values
     valid_values <- row[!is.na(row)]
     # Find the most common value, if it exists
@@ -35,10 +35,9 @@ multi_majority <- function(train_prep_5) {
 }
 
 # Apply the function to the dataframe
-results_multi <- multi_majority(train_prep_5)
+results_multi <- multi_majority(train_prep_comp_5)
 
-# Add the results as a new column `multi_maj` to train_prep_5
-train_prep_5$multi_maj <- results_multi
-train_prep_5$multi_maj <- as.factor(train_prep_5$multi_maj)
-class(train_prep_5$multi_maj)
+# Add the results as a new column `multi_maj` to train_prep_comp_5
+train_prep_comp_5$multi_maj <- results_multi
+train_prep_comp_5$multi_maj <- as.factor(train_prep_comp_5$multi_maj)
 ```
