@@ -3,7 +3,7 @@ The following steps include reading the training dataset and stopword lists for 
 
 ## 1.1 Reading the Training Dataset and preparing the Stopword Lists
 ```r
-file_path <- "C:/path/to/training-dataset/germeval-development-train.jsonl" # Define file paths
+file_path <- "C:/path/to/training-dataset/germeval-competition-traindev.jsonl" # Define file paths
 con <- file(file_path, "r")
 germ_train <- stream_in(con)
 close(con)
@@ -156,6 +156,7 @@ gts_5$Label <- rownames(gts_5)
 gts_5 <- gts_5 %>%
   mutate(Sum = rowSums(.[1:11]))
 ```
+![Sample Image](D:\BA_Github\gts_5.png "gts_5")
 
 ## 1.5 Visualizations of the Training Data
 
@@ -176,27 +177,6 @@ ggplot(daten_long, aes(x = Column, y = Value, fill = as.factor(Label))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill = guide_legend(title = "Ratings"))
 ```
-# 2. Preparation of the Training Dataset
-The following steps prepare the training dataset by creating a binary classification column, cleaning the data, and verifying the factor levels.
-
-```r
-# Create a new column for binary classification
-germ_train_clean$binary_class <- ifelse(germ_train_clean$average_rating > 0.2, 1, 0)
-
-# Convert the new column into a factor
-germ_train_clean$binary_class <- as.factor(germ_train_clean$binary_class)
-
-# Remove the first column
-train_prep <- select(germ_train_clean, -1)
-
-# Check the distribution of the binary class
-table(train_prep$binary_class)
-print(class(train_prep$binary_class))
-
-# Adjust the factor levels to ensure valid R variable names
-train_prep$binary_class <- as.factor(train_prep$binary_class)
-
-# Verify the new level names
-class(train_prep$binary_class)
-print(levels(train_prep$binary_class))
-```
+![Sample Image](D:\BA_Github\distribution_ratings_text.png "gts_5")
+![Sample Image](D:\BA_Github\distribution_text_by_word_count.png "gts_5")
+![Sample Image](D:\BA_Github\labeldistribution.png "gts_5")
