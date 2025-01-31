@@ -115,11 +115,11 @@ germ_comp_clean <- germ_comp_clean %>%
 # Group texts into 5 groups based on word count: 1 - 173, average: 33
 germ_comp_statistics <- comp_stats %>%
   mutate(quantity_words =
-           ifelse(word_stats$word_count %in% 1:30, "1 - 30",
-           ifelse(word_stats$word_count %in% 31:60, "31 - 60",
-           ifelse(word_stats$word_count %in% 61:90, "61 - 90",
-           ifelse(word_stats$word_count %in% 91:120, "91 - 120",
-           ifelse(word_stats$word_count %in% 121:150, "121 - 150",
+           ifelse(comp_stats$word_count %in% 1:30, "1 - 30",
+           ifelse(comp_stats$word_count %in% 31:60, "31 - 60",
+           ifelse(comp_stats$word_count %in% 61:90, "61 - 90",
+           ifelse(comp_stats$word_count %in% 91:120, "91 - 120",
+           ifelse(comp_stats$word_count %in% 121:150, "121 - 150",
                   "more than 150")))))) %>%
   count(quantity_words)
 
@@ -155,7 +155,7 @@ gts_5 <- do.call(cbind, gts_4)
 gts_5 <- as.data.frame(gts_5)
 gts_5$Label <- rownames(gts_5)
 gts_5 <- gts_5 %>%
-  mutate(Sum = rowSums(.[1:11]))
+  mutate(Sum = rowSums(.[1:10]))
 ```
 ![Sample Image](D:\BA_Github\gts_5.png "gts_5")
 
