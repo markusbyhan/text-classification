@@ -18,34 +18,97 @@ In our analysis, SVM with a linear kernel is employed to classify text data base
 The following steps train an SVM model using the TF-IDF feature matrix and evaluate its performance for the \`bin_maj\` strategy.
 
 ```r
-# Model 1 for bin_maj
-set.seed(1234) # Set seed for reproducible results
+# SVM Strategy 1 with 10-fold Cross Validation
 
-# Prepare the data for training
-train_data_svm <- tfidf_train_matrix_scaled # Use the scaled TF-IDF matrix as features
-train_labels_svm_1 <- train_prep_final$bin_maj # Classification labels for strategy 1
+# Set the seed for reproducible results
+set.seed(1234)
 
-# Split the data into training and testing datasets
-train_indices_svm_1 <- createDataPartition(train_prep_final$bin_maj, p = 0.8, list = FALSE)
-train_data_svm_sub_1 <- tfidf_train_matrix_scaled[train_indices_svm_1, ] # Training data
-test_data_svm_sub_1 <- tfidf_train_matrix_scaled[-train_indices_svm_1, ] # Testing data
-train_labels_svm_sub_1 <- train_labels_svm_1[train_indices_svm_1]        # Training labels
-test_labels_svm_sub_1 <- train_labels_svm_1[-train_indices_svm_1]        # Testing labels
+# Prepare training data and target labels
+# - final_traindata_matrix contains the training features (assumed preprocessed and scaled)
+# - target_labels contains the class labels from df_knn_final$bin_maj
+target_labels <- df_knn_final$bin_maj
 
-# Train the SVM model
-# The model uses a linear kernel and is not scaled (features are already scaled)
-svm_model_1 <- svm(x = train_data_svm_sub_1, 
-                   y = train_labels_svm_sub_1, 
-                   type = 'C-classification',
-                   kernel = 'linear',
-                   scale = FALSE)
+# Define training control for 10-fold cross validation using caret
+# - method = "cv" specifies cross-validation
+# - number = 10 specifies the number of folds (10-fold CV)
+train_control <- trainControl(method = "cv", number = 10)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_svm_1 <- predict(svm_model_1, test_data_svm_sub_1)
+# Train an SVM model with a linear kernel using 10-fold cross validation
+# SVM parameters explained:
+# - method = "svmLinear": This uses a support vector machine with a linear kernel.
+#   The linear kernel is useful when the data is linearly separable or when interpretability is important.
+# - trControl = train_control: Specifies the resampling method (here, 10-fold CV) for performance estimation.
+# - tuneLength = 10: Instructs caret to try 10 different candidate values for the tuning parameter(s).
+#   For svmLinear, the primary tuning parameter is usually the cost (C) parameter, which controls the penalty for misclassification.
+# - scale = FALSE: Indicates that the model should not apply its own scaling since the data is assumed to be pre-scaled.
+svm_model_1 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "svmLinear",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_svm_1 <- table(Predicted = predictions_svm_1, Actual = test_labels_svm_sub_1)
+# Print the cross-validation results
+print(svm_model_1)
+
+# Optionally, display the best tuning parameters:
+# best_model <- svm_model_1$bestTune
+# cat("Best Model:\n")
+# print(best_model)
+
+# Display full results from cross-validation
+print(svm_model_1$results)
+
+# Make predictions on the training data (or test data if available)
+svm_predictions_1 <- predict(svm_model_1, final_traindata_matrix)
+
+# Create and print the confusion matrix
+conf_matrix_1 <- confusionMatrix(svm_predictions_1, target_labels)
+cat("Confusion Matrix:\n")
+# Convert the confusion matrix to a matrix (if necessary)
+conf_matrix_1 <- as.matrix(conf_matrix_1$table)
+print(conf_matrix_1)
+
+# Calculate precision and recall for each class
+precision <- diag(conf_matrix_1) / rowSums(conf_matrix_1)
+recall    <- diag(conf_matrix_1) / colSums(conf_matrix_1)
+
+# Replace any NaN values with 0
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate the F1-score for each class
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+
+# Calculate the Macro-F1 score (average F1-score across classes)
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Display the evaluation metrics
+cat("F1-scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# ---------------------------
+# Variable Importance and Correlation Analysis
+# ---------------------------
+
+# Calculate the correlation matrix of the features (assuming competition_tf_sa is defined)
+correlationMatrix <- cor(competition_tf_sa)
+# Find indices of highly correlated attributes (cutoff set to 0.5)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the SVM model using caret's varImp function
+importance <- varImp(svm_model_1, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+# Plot the variable importance
+plot(importance)
 ```
 
 ### Explanation:
@@ -68,34 +131,74 @@ conf_matrix_svm_1 <- table(Predicted = predictions_svm_1, Actual = test_labels_s
 The following steps train an SVM model using the TF-IDF feature matrix and evaluate its performance for the \`bin_one\` strategy.
 
 ```r
-# Model 2 for bin_one
-set.seed(1234) # Set seed for reproducible results
+# SVM Strategy 2 with 10-fold Cross Validation
 
-# Prepare the data for training
-train_data_svm <- tfidf_train_matrix_scaled # Use the scaled TF-IDF matrix as features
-train_labels_svm_2 <- train_prep_final$bin_one # Classification labels for strategy 2
+# Set the seed for reproducibility
+set.seed(1234)
 
-# Split the data into training and testing datasets
-train_indices_svm_2 <- createDataPartition(train_prep_final$bin_one, p = 0.8, list = FALSE)
-train_data_svm_sub_2 <- tfidf_train_matrix_scaled[train_indices_svm_2, ] # Training data
-test_data_svm_sub_2 <- tfidf_train_matrix_scaled[-train_indices_svm_2, ] # Testing data
-train_labels_svm_sub_2 <- train_labels_svm_2[train_indices_svm_2]        # Training labels
-test_labels_svm_sub_2 <- train_labels_svm_2[-train_indices_svm_2]        # Testing labels
+# Prepare the training data and target labels for Strategy 2.
+# - final_traindata_matrix contains the training features.
+# - target_labels are defined by the 'bin_one' column from df_knn_final.
+target_labels <- df_knn_final$bin_one
 
-# Train the SVM model
-# The model uses a linear kernel and is not scaled (features are already scaled)
-svm_model_2 <- svm(x = train_data_svm_sub_2, 
-                   y = train_labels_svm_sub_2, 
-                   type = 'C-classification',
-                   kernel = 'linear',
-                   scale = FALSE)
+# Define training control using 10-fold cross validation.
+train_control <- trainControl(method = "cv", number = 10)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_svm_2 <- predict(svm_model_2, test_data_svm_sub_2)
+# Train an SVM model with a linear kernel.
+# Explanation of parameters:
+# - method = "svmLinear": Uses a support vector machine with a linear kernel.
+# - tuneLength = 10: Searches over 10 candidate values for the cost parameter (C).
+# - scale = FALSE: Assumes the data is already scaled.
+svm_model_2 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "svmLinear",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_svm_2 <- table(Predicted = predictions_svm_2, Actual = test_labels_svm_sub_2)
+# Display the cross-validation results.
+print(svm_model_2)
+print(svm_model_2$results)
+
+# Make predictions on the training data.
+svm_predictions_2 <- predict(svm_model_2, final_traindata_matrix)
+
+# Create and display the confusion matrix.
+conf_matrix_2 <- confusionMatrix(svm_predictions_2, target_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_2 <- as.matrix(conf_matrix_2$table)
+print(conf_matrix_2)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_2) / rowSums(conf_matrix_2)
+recall <- diag(conf_matrix_2) / colSums(conf_matrix_2)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate the F1-score for each class and the macro F1-score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Print evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Perform correlation analysis on the features (assuming 'competition_tf_sa' is defined).
+correlationMatrix <- cor(competition_tf_sa)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the SVM model and plot it.
+importance <- varImp(svm_model_2, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Training the Support Vector Machine (SVM) for Strategy 3 ("bin_all")
@@ -103,34 +206,68 @@ conf_matrix_svm_2 <- table(Predicted = predictions_svm_2, Actual = test_labels_s
 The following steps train an SVM model using the TF-IDF feature matrix and evaluate its performance for the \`bin_all\` strategy.
 
 ```r
-# Model 3 for bin_all
-set.seed(1234) # Set seed for reproducible results
+# SVM Strategy 3 with 10-fold Cross Validation
 
-# Prepare the data for training
-train_data_svm <- tfidf_train_matrix_scaled # Use the scaled TF-IDF matrix as features
-train_labels_svm_3 <- train_prep_final$bin_all # Classification labels for strategy 3
+# Set the seed for reproducibility
+set.seed(1234)
 
-# Split the data into training and testing datasets
-train_indices_svm_3 <- createDataPartition(train_prep_final$bin_all, p = 0.8, list = FALSE)
-train_data_svm_sub_3 <- tfidf_train_matrix_scaled[train_indices_svm_3, ] # Training data
-test_data_svm_sub_3 <- tfidf_train_matrix_scaled[-train_indices_svm_3, ] # Testing data
-train_labels_svm_sub_3 <- train_labels_svm_3[train_indices_svm_3]        # Training labels
-test_labels_svm_sub_3 <- train_labels_svm_3[-train_indices_svm_3]        # Testing labels
+# Prepare the training data and target labels for Strategy 3.
+# Here, the target labels come from the 'bin_all' column of df_knn_final.
+target_labels <- df_knn_final$bin_all
 
-# Train the SVM model
-# The model uses a linear kernel and is not scaled (features are already scaled)
-svm_model_3 <- svm(x = train_data_svm_sub_3, 
-                   y = train_labels_svm_sub_3, 
-                   type = 'C-classification',
-                   kernel = 'linear',
-                   scale = FALSE)
+# Define training control with 10-fold cross validation.
+train_control <- trainControl(method = "cv", number = 10)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_svm_3 <- predict(svm_model_3, test_data_svm_sub_3)
+# Train an SVM model with a linear kernel.
+svm_model_3 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "svmLinear",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_svm_3 <- table(Predicted = predictions_svm_3, Actual = test_labels_svm_sub_3)
+# Display cross-validation results.
+print(svm_model_3)
+
+# Make predictions on the training data.
+svm_predictions_3 <- predict(svm_model_3, final_traindata_matrix)
+
+# Create and display the confusion matrix.
+conf_matrix_3 <- confusionMatrix(svm_predictions_3, target_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_3 <- as.matrix(conf_matrix_3$table)
+print(conf_matrix_3)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_3) / rowSums(conf_matrix_3)
+recall <- diag(conf_matrix_3) / colSums(conf_matrix_3)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Print evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Perform correlation analysis on the training features.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate and plot variable importance.
+importance <- varImp(svm_model_3, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Training the Support Vector Machine (SVM) for Strategy 4 ("multi_maj")
@@ -138,34 +275,72 @@ conf_matrix_svm_3 <- table(Predicted = predictions_svm_3, Actual = test_labels_s
 The following steps train an SVM model using the TF-IDF feature matrix and evaluate its performance for the `multi_maj` strategy.
 
 ```r
-# Model 4 for multi_maj
-set.seed(1234) # Set seed for reproducible results
+# SVM Strategy 4 with 10-fold Cross Validation
 
-# Prepare the data for training
-train_data_svm <- tfidf_train_matrix_scaled # Use the scaled TF-IDF matrix as features
-train_labels_svm_4 <- train_prep_final$multi_maj # Classification labels for strategy 4
+# Set the seed for reproducibility
+set.seed(1234)
 
-# Split the data into training and testing datasets
-train_indices_svm_4 <- createDataPartition(train_labels_svm_4, p = 0.8, list = FALSE)
-train_data_svm_sub_4 <- tfidf_train_matrix_scaled[train_indices_svm_4, ] # Training data
-test_data_svm_sub_4 <- tfidf_train_matrix_scaled[-train_indices_svm_4, ] # Testing data
-train_labels_svm_sub_4 <- train_labels_svm_4[train_indices_svm_4]        # Training labels
-test_labels_svm_sub_4 <- train_labels_svm_4[-train_indices_svm_4]        # Testing labels
+# Prepare the training data and target labels for Strategy 4.
+# Target labels are derived from the 'multi_maj' column in df_knn_final.
+target_labels <- df_knn_final$multi_maj
 
-# Train the SVM model
-# The model uses a linear kernel and is not scaled (features are already scaled)
-svm_model_4 <- svm(x = train_data_svm_sub_4, 
-                   y = train_labels_svm_sub_4, 
-                   type = 'C-classification',
-                   kernel = 'linear',
-                   scale = FALSE)
+# Define training control with 10-fold cross validation.
+train_control <- trainControl(method = "cv", number = 10)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_svm_4 <- predict(svm_model_4, test_data_svm_sub_4)
+# Train an SVM model with a linear kernel.
+svm_model_4 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "svmLinear",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_svm_4 <- table(Predicted = predictions_svm_4, Actual = test_labels_svm_sub_4)
+# Display cross-validation results.
+print(svm_model_4)
+
+# Make predictions on the training data.
+svm_predictions_4 <- predict(svm_model_4, final_traindata_matrix)
+
+# Convert predictions and target labels to factors with levels 0 to 4.
+svm_predictions_4 <- factor(svm_predictions_4, levels = 0:4)
+target_labels <- factor(target_labels, levels = 0:4)
+
+# Create and display the confusion matrix.
+conf_matrix_4 <- confusionMatrix(svm_predictions_4, target_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_4 <- as.matrix(conf_matrix_4$table)
+print(conf_matrix_4)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_4) / rowSums(conf_matrix_4)
+recall <- diag(conf_matrix_4) / colSums(conf_matrix_4)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Print evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Perform correlation analysis on the training features.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate and plot variable importance.
+importance <- varImp(svm_model_4, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Training the Support Vector Machine (SVM) for Strategy 5 ("disagree_bin")
@@ -173,34 +348,68 @@ conf_matrix_svm_4 <- table(Predicted = predictions_svm_4, Actual = test_labels_s
 The following steps train an SVM model using the TF-IDF feature matrix and evaluate its performance for the \`disagree_bin\` strategy.
 
 ```r
-# Model 5 for disagree_bin
-set.seed(1234) # Set seed for reproducible results
+# SVM Strategy 5 with 10-fold Cross Validation
 
-# Prepare the data for training
-train_data_svm <- tfidf_train_matrix_scaled # Use the scaled TF-IDF matrix as features
-train_labels_svm_5 <- train_prep_final$disagree_bin # Classification labels for strategy 5
+# Set the seed for reproducibility
+set.seed(1234)
 
-# Split the data into training and testing datasets
-train_indices_svm_5 <- createDataPartition(train_prep_final$disagree_bin, p = 0.8, list = FALSE)
-train_data_svm_sub_5 <- tfidf_train_matrix_scaled[train_indices_svm_5, ] # Training data
-test_data_svm_sub_5 <- tfidf_train_matrix_scaled[-train_indices_svm_5, ] # Testing data
-train_labels_svm_sub_5 <- train_labels_svm_5[train_indices_svm_5]        # Training labels
-test_labels_svm_sub_5 <- train_labels_svm_5[-train_indices_svm_5]        # Testing labels
+# Prepare the training data and target labels for Strategy 5.
+# Target labels are taken from the 'disagree_bin' column of df_knn_final.
+target_labels <- df_knn_final$disagree_bin
 
-# Train the SVM model
-# The model uses a linear kernel and is not scaled (features are already scaled)
-svm_model_5 <- svm(x = train_data_svm_sub_5, 
-                   y = train_labels_svm_sub_5, 
-                   type = 'C-classification',
-                   kernel = 'linear',
-                   scale = FALSE)
+# Define training control with 10-fold cross validation.
+train_control <- trainControl(method = "cv", number = 10)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_svm_5 <- predict(svm_model_5, test_data_svm_sub_5)
+# Train an SVM model with a linear kernel.
+svm_model_5 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "svmLinear",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_svm_5 <- table(Predicted = predictions_svm_5, Actual = test_labels_svm_sub_5)
+# Display cross-validation results.
+print(svm_model_5)
+
+# Make predictions on the training data.
+svm_predictions_5 <- predict(svm_model_5, final_traindata_matrix)
+
+# Create and display the confusion matrix.
+conf_matrix_5 <- confusionMatrix(svm_predictions_5, target_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_5 <- as.matrix(conf_matrix_5$table)
+print(conf_matrix_5)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_5) / rowSums(conf_matrix_5)
+recall <- diag(conf_matrix_5) / colSums(conf_matrix_5)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Print evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Perform correlation analysis on the training features.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate and plot variable importance.
+importance <- varImp(svm_model_5, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Model Evaluation: Evaluation Metrics
@@ -210,13 +419,37 @@ The foundation of all metrics is the **confusion matrix**, which compares the tr
 ## Confusion Matrix
 The confusion matrix provides a detailed breakdown of the classification outcomes:
 
-|                | Predicted Positive | Predicted Negative |
-|----------------|--------------------|--------------------|
-| **True Positive (TP)**  | Correctly predicted as positive | - |
-| **False Positive (FP)** | Incorrectly predicted as positive | - |
-| **True Negative (TN)**  | Correctly predicted as negative | - |
-| **False Negative (FN)** | Incorrectly predicted as negative | - |
+# Confusion Matrix
 
+A confusion matrix is a table that is used to evaluate the performance of a classification model by comparing the actual class labels with the predicted class labels.
+
+For a **binary classification** problem, the confusion matrix typically looks like this:
+
+|                      | **Predicted: Negative** | **Predicted: Positive** |
+|----------------------|-------------------------|-------------------------|
+| **Actual: Negative** | True Negatives (TN)     | False Positives (FP)    |
+| **Actual: Positive** | False Negatives (FN)    | True Positives (TP)     |
+
+For a **multi-class classification** problem, the matrix is expanded as follows:
+
+|                        | **Predicted: Class 1** | **Predicted: Class 2** | ... | **Predicted: Class N** |
+|------------------------|------------------------|------------------------|-----|------------------------|
+| **Actual: Class 1**    | a₁₁                   | a₁₂                   | ... | a₁ₙ                   |
+| **Actual: Class 2**    | a₂₁                   | a₂₂                   | ... | a₂ₙ                   |
+| ...                    | ...                    | ...                    | ... | ...                    |
+| **Actual: Class N**    | aₙ₁                   | aₙ₂                   | ... | aₙₙ                   |
+
+**Legend:**
+
+- **aᵢⱼ**: The number of instances with actual class *i* that were predicted as class *j*.
+- In a binary problem:
+  - **TN (True Negatives):** Correctly predicted negatives.
+  - **FP (False Positives):** Incorrectly predicted positives (Type I error).
+  - **FN (False Negatives):** Incorrectly predicted negatives (Type II error).
+  - **TP (True Positives):** Correctly predicted positives.
+- In a multi-class problem, the diagonal entries (a₁₁, a₂₂, ..., aₙₙ) indicate the number of correct predictions for each class, while the off-diagonal entries indicate misclassifications.
+
+*Note:* Replace "Class 1", "Class 2", ..., "Class N" with your specific class labels when applying this template.
 ---
 
 ## Metrics
@@ -263,34 +496,3 @@ The confusion matrix provides a detailed breakdown of the classification outcome
 - The choice of metrics depends on the problem domain. For example, Precision is critical in tasks like medical diagnosis to minimize false positives, while Recall is important in detecting fraudulent activities where missing positives is costly.
 - It is recommended to combine metrics like Precision, Recall, and F1 Score for a holistic evaluation of model performance.
 
-# SVM Model Evaluation and Analysis
-
-The following steps evaluate and analyze the performance of each SVM model across the five strategies (\`bin_maj\`, \`bin_one\`, \`bin_all\`, \`multi_maj\`, \`disagree_bin\`).
-
-```r
-# Define a function for SVM model evaluation
-evaluate_svm_model <- function(conf_matrix, model, predictions, test_labels) {
-  # Print the confusion matrix and model details
-  print(conf_matrix)
-  print(model)
-  
-  # Compute and print the evaluation metrics
-  conf_matrix <- confusionMatrix(predictions, test_labels)
-  print(conf_matrix)
-}
-
-# Model 1: bin_maj
-evaluate_svm_model(conf_matrix_svm_1, svm_model_1, predictions_svm_1, test_labels_svm_sub_1)
-
-# Model 2: bin_one
-evaluate_svm_model(conf_matrix_svm_2, svm_model_2, predictions_svm_2, test_labels_svm_sub_2)
-
-# Model 3: bin_all
-evaluate_svm_model(conf_matrix_svm_3, svm_model_3, predictions_svm_3, test_labels_svm_sub_3)
-
-# Model 4: multi_maj
-evaluate_svm_model(conf_matrix_svm_4, svm_model_4, predictions_svm_4, test_labels_svm_sub_4)
-
-# Model 5: disagree_bin
-evaluate_svm_model(conf_matrix_svm_5, svm_model_5, predictions_svm_5, test_labels_svm_sub_5)
-```
