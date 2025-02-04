@@ -19,68 +19,151 @@ In our analysis, Random Forest is used to classify text data (represented by TF-
 The following steps train a Random Forest model using the TF-IDF feature matrix and evaluate its performance for the \`bin_maj\` strategy.
 
 ```r
-# Model 1 for bin_maj
-set.seed(1234) # Set seed for reproducible results
+# RF Strategy 1 with 5-fold Cross Validation
 
-# Prepare the data for training
-train_data <- tfidf_train_matrix_scaled # Use the scaled TF-IDF matrix as features
-train_labels_1 <- train_prep_final$bin_maj # Classification labels for strategy 1
+# Set the seed for reproducible results
+set.seed(1234)
 
-# Train the Random Forest model
-# The model uses 500 trees (ntree = 500) for classification
-rf_model_1 <- randomForest(x = train_data, y = train_labels_1, ntree = 500)
+# Prepare the training data and target labels.
+# Note: 'final_traindata_matrix' contains the training features.
+# Initially, target_labels is assigned from df_knn_final$bin_maj, then overwritten.
+target_labels <- df_knn_final$bin_maj  # First assignment
+tfidf_matrix <- trainingsdata         # TF-IDF matrix (not used later)
+target_labels <- competition_final$bin_maj  # Overwrites the previous target_labels
 
-# Evaluate the model
-# Split the data into training and testing datasets
-train_indices_1 <- createDataPartition(train_prep_final$bin_maj, p = 0.8, list = FALSE)
-train_data_sub_1 <- tfidf_train_matrix_scaled[train_indices_1, ] # Training data
-test_data_sub_1 <- tfidf_train_matrix_scaled[-train_indices_1, ] # Testing data
-train_labels_sub_1 <- train_labels_1[train_indices_1]            # Training labels
-test_labels_sub_1 <- train_labels_1[-train_indices_1]            # Testing labels
+# Split data into training and testing sets (80% train, 20% test)
+train_indices <- createDataPartition(target_labels, p = 0.8, list = FALSE)
+train_data <- final_traindata_matrix[train_indices, ]
+test_data <- final_traindata_matrix[-train_indices, ]
+train_labels <- target_labels[train_indices]
+test_labels <- target_labels[-train_indices]
 
-# Train the Random Forest model again on the training subset
-rf_model_1 <- randomForest(x = train_data_sub_1, y = train_labels_sub_1, ntree = 500)
+# Define training control using 5-fold cross validation
+train_control <- trainControl(method = "cv", number = 5)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_1 <- predict(rf_model_1, test_data_sub_1)
+# Train a Random Forest model using 5-fold cross validation.
+# - method = "rf": Specifies the Random Forest algorithm.
+# - tuneLength = 10: Tests 10 different tuning parameter values.
+# - scale = FALSE: No internal scaling is applied.
+rf_model_1 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "rf",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_1 <- table(Predicted = predictions_1, Actual = test_labels_sub_1)
+# Make predictions on the test set.
+rf_predictions_1 <- predict(rf_model_1, test_data)
+
+# Create and display the confusion matrix.
+conf_matrix_rf_1 <- confusionMatrix(rf_predictions_1, test_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_rf_1 <- as.matrix(conf_matrix_rf_1$table)
+print(conf_matrix_rf_1)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_rf_1) / rowSums(conf_matrix_rf_1)
+recall <- diag(conf_matrix_rf_1) / colSums(conf_matrix_rf_1)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate the F1-score for each class and the macro F1-score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Display evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Analyze feature correlations.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the RF model.
+importance <- varImp(rf_model_1, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 # Training the Random Forest Model (RF) for Strategy 2 ("bin_one")
 
 The following steps train a Random Forest model using the TF-IDF feature matrix and evaluate its performance for the `bin_one` strategy.
 
 ```r
-# Model 2 for bin_one
-set.seed(1234) # Set seed for reproducible results
+# RF Strategy 2 with 5-fold Cross Validation
 
-# Prepare the data for training
-# Use the scaled TF-IDF matrix as features
-train_labels_2 <- train_prep_final$bin_one # Classification labels for strategy 2
+# Set the seed for reproducible results
+set.seed(1234)
 
-# Train the Random Forest model
-# The model uses 500 trees (ntree = 500) for classification
-rf_model_2 <- randomForest(x = train_data, y = train_labels_2, ntree = 500)
+# Prepare the training data and target labels.
+# 'final_traindata_matrix' contains the training features.
+# Here, target_labels are defined using the 'bin_one' column.
+target_labels <- df_knn_final$bin_one
 
-# Evaluate the model
-# Split the data into training and testing datasets
-train_indices_2 <- createDataPartition(train_prep_final$bin_one, p = 0.8, list = FALSE)
-train_data_sub_2 <- tfidf_train_matrix_scaled[train_indices_2, ] # Training data
-test_data_sub_2 <- tfidf_train_matrix_scaled[-train_indices_2, ] # Testing data
-train_labels_sub_2 <- train_labels_2[train_indices_2]            # Training labels
-test_labels_sub_2 <- train_labels_2[-train_indices_2]            # Testing labels
+# Split data into training (80%) and testing (20%) sets.
+train_indices <- createDataPartition(target_labels, p = 0.8, list = FALSE)
+train_data <- final_traindata_matrix[train_indices, ]
+test_data <- final_traindata_matrix[-train_indices, ]
+train_labels <- target_labels[train_indices]
+test_labels <- target_labels[-train_indices]
 
-# Train the Random Forest model again on the training subset
-rf_model_2 <- randomForest(x = train_data_sub_2, y = train_labels_sub_2, ntree = 500)
+# Define training control using 5-fold cross validation.
+train_control <- trainControl(method = "cv", number = 5)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_2 <- predict(rf_model_2, test_data_sub_2)
+# Train a Random Forest model using 5-fold cross validation.
+rf_model_2 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "rf",
+  trControl = train_control,
+  tuneLength = 10,  # Number of candidate tuning parameters.
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_2 <- table(Predicted = predictions_2, Actual = test_labels_sub_2)
+# Make predictions on the test set.
+rf_predictions_2 <- predict(rf_model_2, test_data)
+
+# Create and display the confusion matrix.
+conf_matrix_rf_2 <- confusionMatrix(rf_predictions_2, test_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_rf_2 <- as.matrix(conf_matrix_rf_2$table)
+print(conf_matrix_rf_2)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_rf_2) / rowSums(conf_matrix_rf_2)
+recall <- diag(conf_matrix_rf_2) / colSums(conf_matrix_rf_2)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Display evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Analyze feature correlations.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the RF model.
+importance <- varImp(rf_model_2, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Training the Random Forest Model (RF) for Strategy 3 ("bin_all")
@@ -88,34 +171,72 @@ conf_matrix_2 <- table(Predicted = predictions_2, Actual = test_labels_sub_2)
 The following steps train a Random Forest model using the TF-IDF feature matrix and evaluate its performance for the \`bin_all\` strategy.
 
 ```r
-# Model 3 for bin_all
-set.seed(1234) # Set seed for reproducible results
+# RF Strategy 3 with 5-fold Cross Validation
 
-# Prepare the data for training
-# Use the scaled TF-IDF matrix as features
-train_labels_3 <- train_prep_final$bin_all # Classification labels for strategy 3
+# Set the seed for reproducible results
+set.seed(1234)
 
-# Train the Random Forest model
-# The model uses 500 trees (ntree = 500) for classification
-rf_model_3 <- randomForest(x = train_data, y = train_labels_3, ntree = 500)
+# Prepare the training data and target labels.
+# Here, target_labels are defined using the 'bin_all' column.
+target_labels <- df_knn_final$bin_all
 
-# Evaluate the model
-# Split the data into training and testing datasets
-train_indices_3 <- createDataPartition(train_prep_final$bin_all, p = 0.8, list = FALSE)
-train_data_sub_3 <- tfidf_train_matrix_scaled[train_indices_3, ] # Training data
-test_data_sub_3 <- tfidf_train_matrix_scaled[-train_indices_3, ] # Testing data
-train_labels_sub_3 <- train_labels_3[train_indices_3]            # Training labels
-test_labels_sub_3 <- train_labels_3[-train_indices_3]            # Testing labels
+# Split the data into training (80%) and testing (20%) sets.
+train_indices <- createDataPartition(target_labels, p = 0.8, list = FALSE)
+train_data <- final_traindata_matrix[train_indices, ]
+test_data <- final_traindata_matrix[-train_indices, ]
+train_labels <- target_labels[train_indices]
+test_labels <- target_labels[-train_indices]
 
-# Train the Random Forest model again on the training subset
-rf_model_3 <- randomForest(x = train_data_sub_3, y = train_labels_sub_3, ntree = 500)
+# Define training control using 5-fold cross validation.
+train_control <- trainControl(method = "cv", number = 5)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_3 <- predict(rf_model_3, test_data_sub_3)
+# Train a Random Forest model using 5-fold cross validation.
+rf_model_3 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "rf",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_3 <- table(Predicted = predictions_3, Actual = test_labels_sub_3)
+# Make predictions on the test set.
+rf_predictions_3 <- predict(rf_model_3, test_data)
+
+# Create and display the confusion matrix.
+conf_matrix_rf_3 <- confusionMatrix(rf_predictions_3, test_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_rf_3 <- as.matrix(conf_matrix_rf_3$table)
+print(conf_matrix_rf_3)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_rf_3) / rowSums(conf_matrix_rf_3)
+recall <- diag(conf_matrix_rf_3) / colSums(conf_matrix_rf_3)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Display evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Analyze feature correlations.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the RF model.
+importance <- varImp(rf_model_3, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Training the Random Forest Model (RF) for Strategy 4 ("multi_maj")
@@ -123,34 +244,76 @@ conf_matrix_3 <- table(Predicted = predictions_3, Actual = test_labels_sub_3)
 The following steps train a Random Forest model using the TF-IDF feature matrix and evaluate its performance for the `multi_maj` strategy.
 
 ```r
-# Model 4 for multi_maj
-set.seed(1234) # Set seed for reproducible results
+# RF Strategy 4 with 5-fold Cross Validation
 
-# Prepare the data for training
-# Use the scaled TF-IDF matrix as features
-train_labels_4 <- train_prep_final$multi_maj # Classification labels for strategy 4
+# Set the seed for reproducibility
+set.seed(1234)
 
-# Train the Random Forest model
-# The model uses 500 trees (ntree = 500) for classification
-rf_model_4 <- randomForest(x = train_data, y = train_labels_4, ntree = 500)
+# Prepare the training data and target labels.
+# Here, target_labels are defined using the 'multi_maj' column.
+target_labels <- df_knn_final$multi_maj
 
-# Evaluate the model
-# Split the data into training and testing datasets
-train_indices_4 <- createDataPartition(train_prep_final$multi_maj, p = 0.8, list = FALSE)
-train_data_sub_4 <- tfidf_train_matrix_scaled[train_indices_4, ] # Training data
-test_data_sub_4 <- tfidf_train_matrix_scaled[-train_indices_4, ] # Testing data
-train_labels_sub_4 <- train_labels_4[train_indices_4]            # Training labels
-test_labels_sub_4 <- train_labels_4[-train_indices_4]            # Testing labels
+# Split the data into training (80%) and testing (20%) sets.
+train_indices <- createDataPartition(target_labels, p = 0.8, list = FALSE)
+train_data <- final_traindata_matrix[train_indices, ]
+test_data <- final_traindata_matrix[-train_indices, ]
+train_labels <- target_labels[train_indices]
+test_labels <- target_labels[-train_indices]
 
-# Train the Random Forest model again on the training subset
-rf_model_4 <- randomForest(x = train_data_sub_4, y = train_labels_sub_4, ntree = 500)
+# Define training control using 5-fold cross validation.
+train_control <- trainControl(method = "cv", number = 5)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_4 <- predict(rf_model_4, test_data_sub_4)
+# Train a Random Forest model using 5-fold cross validation.
+rf_model_4 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "rf",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_4 <- table(Predicted = predictions_4, Actual = test_labels_sub_4)
+# Make predictions on the test set.
+rf_predictions_4 <- predict(rf_model_4, test_data)
+
+# Convert predictions and true labels to factors with levels 0 to 4.
+rf_predictions_4 <- factor(rf_predictions_4, levels = 0:4)
+test_labels_f <- factor(test_labels, levels = 0:4)
+
+# Create and display the confusion matrix.
+conf_matrix_rf_4 <- confusionMatrix(rf_predictions_4, test_labels_f)
+cat("Confusion Matrix:\n")
+print(conf_matrix_rf_4$table)
+
+# Calculate precision and recall for each class.
+conf_matrix_rf_4_table <- as.matrix(conf_matrix_rf_4$table)
+precision <- diag(conf_matrix_rf_4_table) / rowSums(conf_matrix_rf_4_table)
+recall <- diag(conf_matrix_rf_4_table) / colSums(conf_matrix_rf_4_table)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Display evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Analyze feature correlations.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the RF model.
+importance <- varImp(rf_model_4, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Training the Random Forest Model (RF) for Strategy 5 ("disagree_bin")
@@ -158,34 +321,72 @@ conf_matrix_4 <- table(Predicted = predictions_4, Actual = test_labels_sub_4)
 The following steps train a Random Forest model using the TF-IDF feature matrix and evaluate its performance for the \`disagree_bin\` strategy.
 
 ```r
-# Model 5 for disagree_bin
-set.seed(1234) # Set seed for reproducible results
+# RF Strategy 5 with 5-fold Cross Validation
 
-# Prepare the data for training
-# Use the scaled TF-IDF matrix as features
-train_labels_5 <- train_prep_final$disagree_bin # Classification labels for strategy 5
+# Set the seed for reproducible results
+set.seed(1234)
 
-# Train the Random Forest model
-# The model uses 500 trees (ntree = 500) for classification
-rf_model_5 <- randomForest(x = train_data, y = train_labels_5, ntree = 500)
+# Prepare the training data and target labels.
+# Here, target_labels are defined using the 'disagree_bin' column.
+target_labels <- df_knn_final$disagree_bin
 
-# Evaluate the model
-# Split the data into training and testing datasets
-train_indices_5 <- createDataPartition(train_prep_final$disagree_bin, p = 0.8, list = FALSE)
-train_data_sub_5 <- tfidf_train_matrix_scaled[train_indices_5, ] # Training data
-test_data_sub_5 <- tfidf_train_matrix_scaled[-train_indices_5, ] # Testing data
-train_labels_sub_5 <- train_labels_5[train_indices_5]            # Training labels
-test_labels_sub_5 <- train_labels_5[-train_indices_5]            # Testing labels
+# Split the data into training (80%) and testing (20%) sets.
+train_indices <- createDataPartition(target_labels, p = 0.8, list = FALSE)
+train_data <- final_traindata_matrix[train_indices, ]
+test_data <- final_traindata_matrix[-train_indices, ]
+train_labels <- target_labels[train_indices]
+test_labels <- target_labels[-train_indices]
 
-# Train the Random Forest model again on the training subset
-rf_model_5 <- randomForest(x = train_data_sub_5, y = train_labels_sub_5, ntree = 500)
+# Define training control using 5-fold cross validation.
+train_control <- trainControl(method = "cv", number = 5)
 
-# Predictions and evaluation
-# Predict the labels for the testing data
-predictions_5 <- predict(rf_model_5, test_data_sub_5)
+# Train a Random Forest model using 5-fold cross validation.
+rf_model_5 <- train(
+  x = final_traindata_matrix,
+  y = target_labels,
+  method = "rf",
+  trControl = train_control,
+  tuneLength = 10,
+  scale = FALSE
+)
 
-# Generate a confusion matrix to evaluate the predictions
-conf_matrix_5 <- table(Predicted = predictions_5, Actual = test_labels_sub_5)
+# Make predictions on the test set.
+rf_predictions_5 <- predict(rf_model_5, test_data)
+
+# Create and display the confusion matrix.
+conf_matrix_rf_5 <- confusionMatrix(rf_predictions_5, test_labels)
+cat("Confusion Matrix:\n")
+conf_matrix_rf_5 <- as.matrix(conf_matrix_rf_5$table)
+print(conf_matrix_rf_5)
+
+# Calculate precision and recall for each class.
+precision <- diag(conf_matrix_rf_5) / rowSums(conf_matrix_rf_5)
+recall <- diag(conf_matrix_rf_5) / colSums(conf_matrix_rf_5)
+precision[is.na(precision)] <- 0
+recall[is.na(recall)] <- 0
+
+# Calculate F1-scores and the Macro F1-Score.
+f1_scores <- 2 * (precision * recall) / (precision + recall)
+f1_scores[is.na(f1_scores)] <- 0
+macro_f1_score <- mean(f1_scores, na.rm = TRUE)
+
+# Display evaluation metrics.
+cat("F1-Scores for each class:\n", f1_scores, "\n")
+cat("Macro F1-Score:\n", macro_f1_score, "\n")
+cat("Precision for each class:\n", precision, "\n")
+cat("Recall for each class:\n", recall, "\n")
+
+# Analyze feature correlations.
+correlationMatrix <- cor(final_traindata_matrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff = 0.5)
+cat("Indexes of highly correlated features:\n")
+print(highlyCorrelated)
+
+# Estimate variable importance from the RF model.
+importance <- varImp(rf_model_5, scale = FALSE)
+cat("Variable Importance:\n")
+print(importance)
+plot(importance)
 ```
 
 # Model Evaluation: Evaluation Metrics
@@ -247,37 +448,3 @@ The confusion matrix provides a detailed breakdown of the classification outcome
 ## Notes
 - The choice of metrics depends on the problem domain. For example, Precision is critical in tasks like medical diagnosis to minimize false positives, while Recall is important in detecting fraudulent activities where missing positives is costly.
 - It is recommended to combine metrics like Precision, Recall, and F1 Score for a holistic evaluation of model performance.
-
-# Random Forest Model Evaluation and Analysis
-
-The following steps evaluate and analyze the performance of each Random Forest model across the five strategies (\`bin_maj\`, \`bin_one\`, \`bin_all\`, \`multi_maj\`, \`disagree_bin\`). Additionally, feature importance is computed and visualized for each model.
-
-```r
-# Define a function for Random Forest model evaluation
-evaluate_rf_model <- function(conf_matrix, model) {
-  # Print the confusion matrix and model details
-  print(conf_matrix)
-  print(model)
-  
-  # Display feature importance
-  importance(model)
-  
-  # Plot feature importance
-  varImpPlot(model)
-}
-
-# Model 1: bin_maj
-evaluate_rf_model(conf_matrix_1, rf_model_1)
-
-# Model 2: bin_one
-evaluate_rf_model(conf_matrix_2, rf_model_2)
-
-# Model 3: bin_all
-evaluate_rf_model(conf_matrix_3, rf_model_3)
-
-# Model 4: multi_maj
-evaluate_rf_model(conf_matrix_4, rf_model_4)
-
-# Model 5: disagree_bin
-evaluate_rf_model(conf_matrix_5, rf_model_5)
-```
