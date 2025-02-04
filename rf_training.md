@@ -394,15 +394,36 @@ plot(importance)
 The foundation of all metrics is the **confusion matrix**, which compares the true labels with the predicted labels. The following metrics are commonly used for evaluating classification models:
 
 ## Confusion Matrix
-The confusion matrix provides a detailed breakdown of the classification outcomes:
 
-|                | Predicted Positive | Predicted Negative |
-|----------------|--------------------|--------------------|
-| **True Positive (TP)**  | Correctly predicted as positive | - |
-| **False Positive (FP)** | Incorrectly predicted as positive | - |
-| **True Negative (TN)**  | Correctly predicted as negative | - |
-| **False Negative (FN)** | Incorrectly predicted as negative | - |
+A confusion matrix is a table that is used to evaluate the performance of a classification model by comparing the actual class labels with the predicted class labels.
 
+For a **binary classification** problem, the confusion matrix typically looks like this:
+
+|                      | **Predicted: Negative** | **Predicted: Positive** |
+|----------------------|-------------------------|-------------------------|
+| **Actual: Negative** | True Negatives (TN)     | False Positives (FP)    |
+| **Actual: Positive** | False Negatives (FN)    | True Positives (TP)     |
+
+For a **multi-class classification** problem, the matrix is expanded as follows:
+
+|                        | **Predicted: Class 1** | **Predicted: Class 2** | ... | **Predicted: Class N** |
+|------------------------|------------------------|------------------------|-----|------------------------|
+| **Actual: Class 1**    | a₁₁                   | a₁₂                   | ... | a₁ₙ                   |
+| **Actual: Class 2**    | a₂₁                   | a₂₂                   | ... | a₂ₙ                   |
+| ...                    | ...                    | ...                    | ... | ...                    |
+| **Actual: Class N**    | aₙ₁                   | aₙ₂                   | ... | aₙₙ                   |
+
+**Legend:**
+
+- **aᵢⱼ**: The number of instances with actual class *i* that were predicted as class *j*.
+- In a binary problem:
+  - **TN (True Negatives):** Correctly predicted negatives.
+  - **FP (False Positives):** Incorrectly predicted positives (Type I error).
+  - **FN (False Negatives):** Incorrectly predicted negatives (Type II error).
+  - **TP (True Positives):** Correctly predicted positives.
+- In a multi-class problem, the diagonal entries (a₁₁, a₂₂, ..., aₙₙ) indicate the number of correct predictions for each class, while the off-diagonal entries indicate misclassifications.
+
+*Note:* Replace "Class 1", "Class 2", ..., "Class N" with your specific class labels when applying this template.
 ---
 
 ## Metrics
