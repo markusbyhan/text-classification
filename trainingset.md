@@ -53,8 +53,6 @@ text_preprocessing_2 <- function(corpus_comp_train) {
 # Apply the second preprocessing function to the corpus
 corpus_comp_train <- text_preprocessing_2(corpus_comp_train)
 ```
-Bild einfügen! corpus_comp_train_2.png
-
 # Stopword Handling
 
 The following step removes stopwords from the text in the corpus using the pre-defined list `all_stopwords`.
@@ -67,6 +65,9 @@ corpus_comp_train_2 <- tm_map(corpus_comp_train, removeWords, all_stopwords)
 # Inspect the 5th document in the processed corpus to verify the removal of stopwords
 inspect(corpus_comp_train_2[5])
 ```
+
+![corpus_comp_train_2.png](corpus_comp_train_2.png)
+
 # Tokenization, Stemming, and Lemmatization
 
 ## Stemming
@@ -105,7 +106,8 @@ tokenize_corpus <- function(corpus_comp_train_2) {
 tokens_comp_train <- tokenize_corpus(corpus_comp_train_2)
 ```
 
-Bild einfügen! tokens_comp_train.png
+![tokens_comp_train.png](tokens_comp_train.png)
+
 
 # Converting the Token List into a DataFrame
 
@@ -157,4 +159,5 @@ corpus_comp_clean <- Corpus(VectorSource(tokens_comp_train_flat$Tokens))
 tokens_comp_clean <- tokenize_corpus(corpus_comp_clean)
 ```
 
-Bild einfügen: tokens_comp_clean
+![tokens_comp_clean.png](tokens_comp_clean.png)
+
