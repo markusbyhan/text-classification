@@ -2,6 +2,8 @@
 
 The following steps prepare the tokens for lemmatization using the TreeTagger tool. Lemmatization provides a more context-aware text analysis compared to stemming. For example, the word "besser" 
 would be lemmatized to its base form "gut," which cannot be achieved through simple stemming.
+Here is the link to Helmut Schmidt's tool: [TreeTagger](https://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/). Additionally, I recommend visiting 
+[IMS Stuttgart](https://www.ims.uni-stuttgart.de/forschung/ressourcen/werkzeuge/treetagger/) for further information.
 
 The \`koRpus\` package integrates with TreeTagger to perform lemmatization.
 
