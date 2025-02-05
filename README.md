@@ -34,3 +34,64 @@ I won’t go into detail on all the fundamentals of machine learning here, as th
 ### Random Forest:
 - [Random Forest Algorithm Explained](https://towardsdatascience.com/the-random-forest-algorithm-d457d499ffcd)
 - [Random Forest in Machine Learning](https://www.geeksforgeeks.org/random-forest-in-machine-learning/)
+
+
+# Containing files
+## Testdata
+- Competition Phase = germeval-competition-test.jsonl
+- Development Phae =germeval-development-test.jsonl
+
+## Trainingdata
+- Competition Phase = germeval-competition-traindev.jsonl
+- Development Phase  germeval-development-train.jsonl
+
+## Setup and preprocessing
+- Introduction = README.md
+- Task description = task_prequisites.md
+- Packages = package_setup.md
+- Basis preprocessing I = preprocessing_training.md
+- Basic preprocessing II = trainingset.md
+
+
+## 5 Stategies for textclassification
+- All Annotators = train_bin_all.md
+- Majority Decision = train_bin_maj.md
+- At least 1 Annotator = train_bin_one.md
+- Disagreement = train_disagree_bin.md
+- Multi-Majority = train_multi_maj.md
+
+## Handling the missing values
+- knn_imputation.md
+
+## Sentimentanalysis with the "syuzhet"-Package
+- sentimentanalysis.md
+
+## Lemmatizing the Tokens with Treetagger
+- treetagger.md
+
+## Kombining TF-IDF and Sentimentanalysis
+- tf_idf.md 
+
+## Training and Evaluation of the models
+- svm_training.md
+- rf_training.md
+
+## Tuning and Evaluation of the models
+- svm_tuning.md
+- rf_tuning.md
+
+## Prediction of the Testdata
+- prediction.md
+
+## Bachelorthesis
+- Kolloquium (german) = BA_Präsentation.pdf
+- Thesis (german) = mwe-bachelor.pdf
+
+## Important Notice
+
+This repository is still under my review. After three-quarters of a year and 6,000 lines of code, I need to take a step back, consolidate some steps and variables, and re-evaluate the entire process.
+
+### What’s the lesson here?
+Structured coding moves you forward, while wild experimentation and constant changes do not...
+
+In particular, the areas of **Treetagger, TF-IDF, sentiment analysis, and application to the test data** are not yet finalized but will be reviewed in the coming weeks.
