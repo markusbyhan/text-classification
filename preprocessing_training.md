@@ -36,7 +36,7 @@ germ_comp_train_2 <- germ_comp_train %>%
               values_from = label) %>%   # Extract the labels for each user
   select(-row)                           # Remove the temporary row number column
 ```
-![germ_comp_train_2](images/germ_comp_train_2.png)
+![germ_comp_train_2](germ_comp_train_2.png)
 
 Reorder the columns corresponding to users or moderators into the correct sequence. Subsequently, clean the categorizations by removing descriptive texts 
 from the labels and converting them into numerical values for classification, based on the conducted assessments:
@@ -73,7 +73,7 @@ germ_comp_train_4 <- germ_comp_train_4 %>%
 # Removing duplicates:
 germ_comp_clean <- unique(germ_comp_train_4)
 ```
-![Sample Image](D:\BA_Github\germ_train_clean.png "germ_train_clean")
+![germ_comp_clean](germ_comp_clean.png)
 
 ## 1.4 Let's Take a Look at Basic Information About the Training Dataset
 
@@ -157,7 +157,7 @@ gts_5$Label <- rownames(gts_5)
 gts_5 <- gts_5 %>%
   mutate(Sum = rowSums(.[1:10]))
 ```
-![Sample Image](D:\BA_Github\gts_5.png "gts_5")
+![gts_5](gts_5.png)
 
 ## 1.5 Visualizations of the Training Data
 
@@ -178,6 +178,7 @@ ggplot(daten_long, aes(x = Column, y = Value, fill = as.factor(Label))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill = guide_legend(title = "Ratings"))
 ```
-![Sample Image](D:\BA_Github\distribution_ratings_text.png "gts_5")
-![Sample Image](D:\BA_Github\distribution_text_by_word_count.png "gts_5")
-![Sample Image](D:\BA_Github\labeldistribution.png "gts_5")
+![distribution_ratings_text.png](distribution_ratings_text.png)
+![distribution_text_by_word_count.png](distribution_text_by_word_count.png)
+![labeldistribution.png](labeldistribution.png)
+
