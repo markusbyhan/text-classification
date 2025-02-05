@@ -72,7 +72,7 @@ germeval_comp_task1_rf_final <- data.frame(
 print(germeval_comp_task1_rf_final)
 ```
 
-# Save the combined SVM predictions to a TSV file
+# Save the combined SVM and RF predictions to a TSV file
 
 ```r
 write.table(germeval_comp_task1_svm_final, 
