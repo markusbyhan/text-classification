@@ -26,7 +26,8 @@ head(sentiment_scores_comp_sen)
 # This gives an overview of sentiment distributions across the dataset
 summary(sentiment_scores_comp_sen)
 ```
-Bild einfügen: summary_sentiment
+![summary_sentiment.png](summary_sentiment.png)
+
 
 ### Frequent Words by Sentiment
 ```r
@@ -140,6 +141,6 @@ barplot(
   ylab = "Share of the corpus"                  # Y-axis label
 )
 ```
-Bild einfügen: Sentiment_train
+![sentiment_training.png](sentiment_training.png)
 
 ```
