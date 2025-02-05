@@ -36,7 +36,7 @@ germ_comp_train_2 <- germ_comp_train %>%
               values_from = label) %>%   # Extract the labels for each user
   select(-row)                           # Remove the temporary row number column
 ```
-![Sample Image](D:\BA_Github\germ_train_2.png "germ_train_2")
+![germ_comp_train_2](images/germ_comp_train_2.png)
 
 Reorder the columns corresponding to users or moderators into the correct sequence. Subsequently, clean the categorizations by removing descriptive texts 
 from the labels and converting them into numerical values for classification, based on the conducted assessments:
